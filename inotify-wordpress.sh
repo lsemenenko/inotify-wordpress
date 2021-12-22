@@ -136,16 +136,17 @@ process_log() {
   fi
 
   # process inotify-wordpress.log and decide alert level based on input
-  if [[ -f "$HOME/inotify-wordpress.log" ]]; then
+  if [[ -f "$HOME/inotify-wordpress.log" && -s "$HOME/inotify-wordpress.log" ]]; then
     while read -r line; do
       message+=("${line}")
+      ((count++))
     done < "$HOME/inotify-wordpress.log"
 
     cat "$HOME/inotify-wordpress.log" | tee -a "$HOME/inotify-wordpress.log.$(date +%F)" >/dev/null 2>&1
     truncate -s 0 "$HOME/inotify-wordpress.log"
   fi
 
-  if [[ ${alert} -gt 0 ]]; then
+  if [[ ${count} -gt 0 ]]; then
     echo "sending alert..."
     if [[ -n "${pushover[0]}" && -n "${pushover[1]}" ]]; then
       IFS=$"\n"
