@@ -8,6 +8,7 @@ main() {
     local var="$1"
     case "${var}" in
       --install|-i) install;;
+      --uninstall|-u) uninstall;;
       --run|-r) run;;
       --kill|-k) kill_proc;;
       --process|-p) process_log;;
@@ -46,9 +47,19 @@ install() {
     cp ./sites.example.conf "$HOME/sites.conf"
   fi
 
-  if [[ ! -f "HOME/excludes.conf" ]]; then
+  if [[ ! -f "$HOME/excludes.conf" ]]; then
     cp ./excludes.example.conf "$HOME/excludes.conf"
   fi
+
+  exit 0
+
+}
+
+uninstall() {
+
+  "$HOME/inotify-wordpress" --kill
+  rm /etc/cron.d/inotify-wordpress
+  rm "$HOME/inotify-wordpress"
 
   exit 0
 
@@ -99,7 +110,7 @@ run() {
   # run inotifywait
   IFS=
   local run_command=()
-  run_command=(inotifywait -d -m -r -q -e "modify,attrib,close_write,moved_to,moved_from,move,create,delete,delete_self,unmount" -o $HOME/inotify-wordpress.log --format "%w%f %e" "${site_folders[@]}" --exclude "${regex_exclude_piped}")
+  run_command=(inotifywait -d -m -r -q -e "modify,attrib,close_write,moved_to,moved_from,move,create,delete,delete_self,unmount" -o $HOME/inotify-wordpress.log --timefmt "%F %T" --format "%T %w%f %e" "${site_folders[@]}" --exclude "${regex_exclude_piped}")
   ${run_command[@]} && \
   pgrep -f "${run_command[*]}" | tee /var/tmp/inotify-wordpress.pid || \
     echo "Something went wrong..." && \
@@ -124,19 +135,26 @@ process_log() {
     done < "$HOME/pushover.conf"
   fi
 
-  while read -r line; do
-    ((count++))
-  done < "$HOME/inotify-wordpress.log"
+  # process inotify-wordpress.log and decide alert level based on input
+  if [[ -f "$HOME/inotify-wordpress.log" ]]; then
+    while read -r line; do
+      message+=("${line}")
+    done < "$HOME/inotify-wordpress.log"
+
+    cat "$HOME/inotify-wordpress.log" | tee -a "$HOME/inotify-wordpress.log.$(date +%F)" >/dev/null 2>&1
+    truncate -s 0 "$HOME/inotify-wordpress.log"
+  fi
 
   if [[ ${alert} -gt 0 ]]; then
     echo "sending alert..."
-    if [[ -n "${pushover}" ]]; then
-      echo "send alerts to pushover..."
-      # curl -s \
-      # --form-string "token=${pushover[0]}" \
-      # --form-string "user=${pushover[1]}" \
-      # --form-string "message=${message}" \
-      # https://api.pushover.net/1/messages.json
+    if [[ -n "${pushover[0]}" && -n "${pushover[1]}" ]]; then
+      IFS=$"\n"
+       curl -s \
+       --form-string "token=${pushover[0]}" \
+       --form-string "user=${pushover[1]}" \
+       --form-string "message=${message[*]}" \
+       https://api.pushover.net/1/messages.json
+       unset IFS
     fi
   fi
 
@@ -147,7 +165,13 @@ process_log() {
 check_proc() {
 
   local pid
-  pid=$(cat /var/tmp/inotify-wordpress.pid)
+
+  if [[ -f /var/tmp/inotify-wordpress.pid ]]; then
+    pid=$(cat /var/tmp/inotify-wordpress.pid)
+  else
+    "$HOME/inotify-wordpress" --run
+    exit 0
+  fi
 
   if [[ -n "${pid}" ]]; then
     if ! ps -p "${pid}" > /dev/null; then
