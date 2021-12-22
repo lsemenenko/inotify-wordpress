@@ -80,6 +80,7 @@ run() {
     regex_exclude+=("${line}")
   done < excludes.conf
 
+  # format the regex exclude list to include a pipe between iterations
   IFS='|'
   local regex_exclude_piped
   regex_exclude_piped="${regex_exclude[*]}"
@@ -90,7 +91,7 @@ run() {
   #regex_exclude+=('.*/astra/db/.*|')
   #regex_exclude+=('.*/astra-gk/var/db/.*|')
   #regex_exclude+=('.*/mailchimp-for-wp/debug-log.php|')
-  #regex_exclude+=('.*\.(css|jpg|json|xml|csv|png)')
+  #regex_exclude+=('.*\.(css|je?pg|json|xml|csv|png|docx\.?.*)')
 
   # run inotifywait
   IFS=
