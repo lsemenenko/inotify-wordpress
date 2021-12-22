@@ -113,7 +113,16 @@ process_log() {
 
   local alert=0
   local count=0
+  local pushover=()
+  local message
   local line
+
+  # grab pushover api token / user key from pushover.conf (if exists)
+  if [[ -f "$HOME/pushover.conf" ]]; then
+    while read -r line; do
+      pushover+=("${line}")
+    done < "$HOME/pushover.conf"
+  fi
 
   while read -r line; do
     ((count++))
@@ -121,6 +130,14 @@ process_log() {
 
   if [[ ${alert} -gt 0 ]]; then
     echo "sending alert..."
+    if [[ -n "${pushover}" ]]; then
+      echo "send alerts to pushover..."
+      # curl -s \
+      # --form-string "token=${pushover[0]}" \
+      # --form-string "user=${pushover[1]}" \
+      # --form-string "message=${message}" \
+      # https://api.pushover.net/1/messages.json
+    fi
   fi
 
   exit 0
