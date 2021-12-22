@@ -10,7 +10,7 @@ main() {
       --install|-i) install;;
       --run|-r) run;;
       --kill|-k) kill_proc;;
-      --watch|-w) watch;;
+      --process|-p) process_log;;
       --check|-c) check_proc;;
       *) echo "Do nothing!" ;;
     esac
@@ -35,9 +35,19 @@ install() {
     chmod 755 "$HOME/inotify-wordpress"
   fi
 
-  # add cron
+  # add cron for check/process
   if [[ ! -f /etc/cron.d/inotify-wordpress ]]; then
-    echo "* * * * * root $HOME/inotify-wordpress" | tee /etc/cron.d/inotify-wordpress
+    echo "*/5 * * * * root $HOME/inotify-wordpress --check" | tee /etc/cron.d/inotify-wordpress
+    echo "*/5 * * * * root $HOME/inotify-wordpress --process" | tee -a /etc/cron.d/inotify-wordpress
+  fi
+
+  # copy example files
+  if [[ ! -f $HOME/sites.conf ]]; then
+    cp ./sites.example.conf "$HOME/sites.conf"
+  fi
+
+  if [[ ! -f "HOME/excludes.conf" ]]; then
+    cp ./excludes.example.conf "$HOME/excludes.conf"
   fi
 
   exit 0
@@ -67,31 +77,24 @@ run() {
     exit 1
   fi
 
-  # define site folders
+  # import site folders from sites.conf
   local site_folders=()
   local line
   while read -r line; do
     site_folders+=("${line}")
   done < sites.conf
 
-  # define excludes
+  # import excludes from excludes.conf
   local regex_exclude=()
   while read -r line; do
     regex_exclude+=("${line}")
   done < excludes.conf
 
-  # format the regex exclude list to include a pipe between iterations
+  # format the regex_exclude array to include a pipe between elements
   IFS='|'
   local regex_exclude_piped
   regex_exclude_piped="${regex_exclude[*]}"
   unset IFS
-  
-  #regex_exclude+=('.*/wp-content/temp-write-test-.*|')
-  #regex_exclude+=('.*/wc-logs/.*\.log|')
-  #regex_exclude+=('.*/astra/db/.*|')
-  #regex_exclude+=('.*/astra-gk/var/db/.*|')
-  #regex_exclude+=('.*/mailchimp-for-wp/debug-log.php|')
-  #regex_exclude+=('.*\.(css|je?pg|json|xml|csv|png|docx\.?.*)')
 
   # run inotifywait
   IFS=
@@ -106,7 +109,7 @@ run() {
 
 }
 
-watch() {
+process_log() {
 
   local alert=0
   local count=0
