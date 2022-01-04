@@ -149,7 +149,7 @@ process_log() {
   if [[ ${count} -gt 0 ]]; then
     echo "sending alert..."
     if [[ -n "${pushover[0]}" && -n "${pushover[1]}" ]]; then
-      IFS=$"\n"
+      IFS=$'\n'
        curl -s \
        --form-string "token=${pushover[0]}" \
        --form-string "user=${pushover[1]}" \
