@@ -102,13 +102,13 @@ run() {
   local line
   while read -r line; do
     site_folders+=("${line}")
-  done < sites.conf
+  done < "$HOME/sites.conf"
 
   # import excludes from excludes.conf
   local regex_exclude=()
   while read -r line; do
     regex_exclude+=("${line}")
-  done < excludes.conf
+  done < "$HOME/excludes.conf"
 
   # format the regex_exclude array to include a pipe between elements
   IFS='|'
