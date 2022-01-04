@@ -92,7 +92,7 @@ run() {
 
   fi
 
-  if [[ ! -f sites.conf || ! -f excludes.conf ]]; then
+  if [[ ! -f "$HOME/sites.conf" || ! -f "$HOME/excludes.conf" ]]; then
     echo "Missing sites.conf or excludes.conf..."
     exit 1
   fi
