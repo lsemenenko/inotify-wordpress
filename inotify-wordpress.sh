@@ -9,15 +9,13 @@ main() {
     case "${var}" in
       --install|-i) install;;
       --uninstall|-u) uninstall;;
+      --update|-up) update;;
       --run|-r) run;;
       --kill|-k) kill_proc;;
       --process|-p) process_log;;
       --check|-c) check_proc;;
       *) echo "Do nothing!" ;;
     esac
-    
-    shift 1
-
   fi
 
   exit 0
@@ -62,6 +60,17 @@ uninstall() {
   rm "$HOME/inotify-wordpress"
 
   exit 0
+
+}
+
+update() {
+
+  uninstall && \
+  install && \
+  run && \
+
+  exit 0 || \
+  exit 1
 
 }
 
