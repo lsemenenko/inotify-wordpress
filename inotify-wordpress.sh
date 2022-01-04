@@ -26,7 +26,7 @@ install() {
 
   # install inotify-tools if not installed
   if ! type inotifywait >/dev/null 2>&1; then
-    apt-get install inotify-tools
+    apt-get install -y inotify-tools
   fi
 
   if ! type "$HOME/inotify-wordpress" >/dev/null 2>&1; then
@@ -49,7 +49,7 @@ install() {
     cp ./excludes.example.conf "$HOME/excludes.conf"
   fi
 
-  exit 0
+  return 0
 
 }
 
@@ -59,7 +59,7 @@ uninstall() {
   rm /etc/cron.d/inotify-wordpress
   rm "$HOME/inotify-wordpress"
 
-  exit 0
+  return 0
 
 }
 
@@ -69,8 +69,8 @@ update() {
   install && \
   run && \
 
-  exit 0 || \
-  exit 1
+  return 0 || \
+  return 1
 
 }
 
@@ -125,7 +125,7 @@ run() {
     echo "Something went wrong..." && \
     exit 1
 
-  exit 0
+  return 0
 
 }
 
@@ -168,7 +168,7 @@ process_log() {
     fi
   fi
 
-  exit 0
+  return 0
 
 }
 
@@ -189,7 +189,7 @@ check_proc() {
     fi
   fi
 
-  exit 0
+  return 0
 
 }
 
@@ -204,7 +204,7 @@ kill_proc() {
     echo "No PID file exists..."
   fi
 
-  exit 0
+  return 0
 
 }
 
