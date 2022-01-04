@@ -29,15 +29,15 @@ install() {
     apt-get install -y inotify-tools
   fi
 
-  if ! type "$HOME/inotify-wordpress" >/dev/null 2>&1; then
-    cp ./inotify-wordpress.sh "$HOME/inotify-wordpress"
-    chmod 755 "$HOME/inotify-wordpress"
+  if ! type "$HOME/inotify-wordpress.sh" >/dev/null 2>&1; then
+    cp ./inotify-wordpress.sh "$HOME/inotify-wordpress.sh"
+    chmod 755 "$HOME/inotify-wordpress.sh"
   fi
 
   # add cron for check/process
   if [[ ! -f /etc/cron.d/inotify-wordpress ]]; then
-    echo "*/5 * * * * root $HOME/inotify-wordpress --check" | tee /etc/cron.d/inotify-wordpress
-    echo "*/5 * * * * root $HOME/inotify-wordpress --process" | tee -a /etc/cron.d/inotify-wordpress
+    echo "*/5 * * * * root $HOME/inotify-wordpress.sh --check" | tee /etc/cron.d/inotify-wordpress
+    echo "*/5 * * * * root $HOME/inotify-wordpress.sh --process" | tee -a /etc/cron.d/inotify-wordpress
   fi
 
   # copy example files
@@ -55,9 +55,9 @@ install() {
 
 uninstall() {
 
-  "$HOME/inotify-wordpress" --kill
+  "$HOME/inotify-wordpress.sh" --kill
   rm /etc/cron.d/inotify-wordpress
-  rm "$HOME/inotify-wordpress"
+  rm "$HOME/inotify-wordpress.sh"
 
   return 0
 
@@ -179,13 +179,13 @@ check_proc() {
   if [[ -f /var/tmp/inotify-wordpress.pid ]]; then
     pid=$(cat /var/tmp/inotify-wordpress.pid)
   else
-    "$HOME/inotify-wordpress" --run
+    "$HOME/inotify-wordpress.sh" --run
     exit 0
   fi
 
   if [[ -n "${pid}" ]]; then
     if ! ps -p "${pid}" > /dev/null; then
-      "$HOME/inotify-wordpress" --run
+      "$HOME/inotify-wordpress.sh" --run
     fi
   fi
 
